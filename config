@@ -5,6 +5,7 @@
 #
 
 BASEDIR=`pwd`
+REMOTEDIR=pgbench-tools
 PGBENCHBIN=`which pgbench`
 
 # These values are for pgbench 8.4 and later
