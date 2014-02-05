@@ -9,6 +9,7 @@ if [ ! -f $PGBENCHBIN ]; then
 fi
 
 TESTPSQL="psql -h $TESTHOST -U $TESTUSER -p $TESTPORT -d $TESTDB"
+MAXCLIENTS=`echo $SETCLIENTS | tr ' ' '\n' | sort -nr | head -n1`
 
 # See if this database has all the standard pgbench tables in it
 PGCOUNT=`$TESTPSQL -A -t -c "SELECT count(*)  FROM pg_stat_user_tables WHERE relname IN ('pgbench_history','pgbench_tellers','pgbench_accounts','pgbench_branches')"`
@@ -35,11 +36,21 @@ for SCALE in $SCALES; do
     if [ "$PGBENCH_TABLES" -eq "1" ] ; then
       echo Removing old pgbench tables
       $TESTPSQL -c "drop table ${TABLEPREFIX}accounts; drop table ${TABLEPREFIX}branches; drop table ${TABLEPREFIX}tellers; drop table ${TABLEPREFIX}history;"
+
+      echo Removing $MAXCLIENTS duplicate tables
+      for (( client=0; client<$MAXCLIENTS; client++ )); do
+        $TESTPSQL -c "DROP TABLE IF EXISTS citus_$client CASCADE;"
+      done
     fi
     $TESTPSQL -c "vacuum"
 
     echo Creating new pgbench tables
     $PGBENCHBIN -i -s $SCALE -h $TESTHOST -U $TESTUSER -p $TESTPORT $TESTDB
+
+    echo Creating $MAXCLIENTS duplicate tables
+    for (( client=0; client<$MAXCLIENTS; client++ )); do
+      $TESTPSQL -c "CREATE TABLE citus_$client AS TABLE pgbench_accounts; ALTER TABLE citus_$client ADD PRIMARY KEY (aid);"
+    done
   fi
   #
   # Run the main test

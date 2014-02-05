@@ -52,6 +52,9 @@ CREATE TABLE test_bgwriter(
   max_dirty int
 );
 
+DROP SEQUENCE IF EXISTS rr_seq;
+CREATE SEQUENCE rr_seq;
+
 --
 -- Convert hex value to a decimal one.  It's possible to do this using
 -- undocumented features of the bit type, such as:
