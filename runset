@@ -36,12 +36,13 @@ for SCALE in $SCALES; do
     if [ "$PGBENCH_TABLES" -eq "1" ] ; then
       echo Removing old pgbench tables
       $TESTPSQL -c "drop table ${TABLEPREFIX}accounts; drop table ${TABLEPREFIX}branches; drop table ${TABLEPREFIX}tellers; drop table ${TABLEPREFIX}history;"
-
-      echo Removing $MAXCLIENTS duplicate tables
-      for (( client=0; client<$MAXCLIENTS; client++ )); do
-        $TESTPSQL -c "DROP TABLE IF EXISTS citus_$client CASCADE;"
-      done
     fi
+
+    echo Removing $MAXCLIENTS duplicate tables
+    for (( client=0; client<$MAXCLIENTS; client++ )); do
+      $TESTPSQL -c "DROP TABLE IF EXISTS citus_$client CASCADE;"
+    done
+
     $TESTPSQL -c "vacuum"
 
     echo Creating new pgbench tables
