@@ -50,7 +50,7 @@ for SCALE in $SCALES; do
 
     echo Creating $MAXCLIENTS duplicate tables
     for (( client=0; client<$MAXCLIENTS; client++ )); do
-      $TESTPSQL -c "CREATE TABLE citus_$client AS TABLE pgbench_accounts; ALTER TABLE citus_$client ADD PRIMARY KEY (aid);"
+      $TESTPSQL -c "CREATE TABLE citus_$client AS TABLE pgbench_accounts;" # " ALTER TABLE citus_$client ADD PRIMARY KEY (aid);"
     done
   fi
   #
