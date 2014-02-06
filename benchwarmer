@@ -237,7 +237,7 @@ if [ "$OSDATA" -eq "1" ]; then
     ../../kill_pg "${IOSTAT}"
     ../../kill_pg "${MEMINFO}"
   else
-    kill -9 "${VMSTAT}" "${IOSTAT}" "${MEMINFO}"
+    kill "${VMSTAT}" "${IOSTAT}" "${MEMINFO}"
   fi
 fi
 
