@@ -203,12 +203,21 @@ mkdir -p results/$TEST
 
 # Start background daemon collectors
 if [ "$OSDATA" -eq "1" ]; then
-  ./timed-os-stats vmstat > results/$TEST/vmstat.log &
-  VMSTAT=$!
-  ./timed-os-stats iostat > results/$TEST/iostat.log &
-  IOSTAT=$!
-  ./timed-os-stats meminfo > results/$TEST/meminfo.log &
-  MEMINFO=$!
+  if [ "$TESTHOST" = "localhost" ]; then
+    ./timed-os-stats vmstat > results/$TEST/vmstat.log &
+    VMSTAT=$!
+    ./timed-os-stats iostat > results/$TEST/iostat.log &
+    IOSTAT=$!
+    ./timed-os-stats meminfo > results/$TEST/meminfo.log &
+    MEMINFO=$!
+  else
+    ssh -T $TESTHOST $REMOTEDIR/timed-os-stats vmstat > results/$TEST/vmstat.log &
+    VMSTAT=$!
+    ssh -T $TESTHOST $REMOTEDIR/timed-os-stats iostat > results/$TEST/iostat.log &
+    IOSTAT=$!
+    ssh -T $TESTHOST $REMOTEDIR/timed-os-stats meminfo > results/$TEST/meminfo.log &
+    MEMINFO=$!
+  fi
 fi
 
 # Run the main pgbench test
@@ -220,12 +229,16 @@ wait $P
 $RESULTPSQL -q -c "update tests set end_time=now() where test=$TEST"
 
 if [ "$OSDATA" -eq "1" ]; then
-  # The PIDs we have will be the process ID of the Python timed-os-stats
-  # process, but we must make sure to also kill the child processes (launched
-  # via subprocess.Popen()) so they are not lingering forever.
-  ../../kill_pg "${VMSTAT}"
-  ../../kill_pg "${IOSTAT}"
-  ../../kill_pg "${MEMINFO}"
+  if [ "$TESTHOST" = "localhost" ]; then
+    # The PIDs we have will be the process ID of the Python timed-os-stats
+    # process, but we must make sure to also kill the child processes (launched
+    # via subprocess.Popen()) so they are not lingering forever.
+    ../../kill_pg "${VMSTAT}"
+    ../../kill_pg "${IOSTAT}"
+    ../../kill_pg "${MEMINFO}"
+  else
+    kill "${VMSTAT}" "${IOSTAT}" "${MEMINFO}"
+  fi
 fi
 
 # Find largest dirty memory value (which is in kB)
